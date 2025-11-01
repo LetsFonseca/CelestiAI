@@ -2,13 +2,12 @@ import streamlit as st
 from groq import Groq
 import os
 
-st.set_page_config(page_title="Chat dos Signos (Groq)", page_icon="🔮")
+st.set_page_config(page_title="CelestIA - Zodiac Chat", page_icon="🔮")
 
-# pega chave dos secrets
+# get secret key
 groq_api_key = os.getenv("GROQ_API_KEY")
 if not groq_api_key:
     try:
-        # st.secrets pode levantar erro se o arquivo não existir
         groq_api_key = st.secrets["GROQ_API_KEY"]
     except Exception:
         groq_api_key = None
@@ -16,39 +15,38 @@ if not groq_api_key:
 client = Groq(api_key=groq_api_key)
 
 ZODIAC_CONTEXT = """
-Você é um assistente de astrologia, simpático, direto e em português do Brasil.
-Você fala sobre os 12 signos do zodíaco: Áries, Touro, Gêmeos, Câncer, Leão, Virgem,
-Libra, Escorpião, Sagitário, Capricórnio, Aquário e Peixes.
+You are an astrology assistant — friendly, straightforward, and you speak the language that the user speak with you.
+You talk about the 12 zodiac signs: Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn, Aquarius, and Pisces.
 
-Regras:
-- Se o usuário der uma data (ex: 15/08), tente dizer o signo.
-- Se ele disser só o signo, descreva: elemento, qualidades e alertas.
-- Se perguntar compatibilidade, explique rapidamente fogo/ar e terra/água e depois fale do par.
-- Se perguntar “mapa”, diga que precisa de data, hora e cidade.
-- Não prometa previsão do futuro. Mantenha o tom leve.
+Rules:
 
-Se fugir do tema, puxe de volta para astrologia.
+* If the user provides a date (e.g., 15/08), try to determine the zodiac sign.
+* If the user only mentions a sign, describe its element, strengths, and cautions.
+* If the user asks about compatibility, briefly explain the fire/air and earth/water dynamics, then comment on the specific pair.
+* If the user asks about a “birth chart,” explain that you need the date, time, and city of birth.
+* Do not promise to predict the future. Keep the tone light and friendly.
+* If the user strays off topic, steer the conversation back to astrology.
 """
 
-st.title("🔮 Chat dos Signos (IA via Groq)")
-st.write("Pergunte sobre signos, compatibilidade ou datas de nascimento.")
+st.title("🔮 CelestIA - Zodiac Chat")
+st.write("Ask about zodiac signs, compatibility, or birth dates.")
 
-# histórico
+# history
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Oi! Me diz um signo ou uma data que eu te conto 👀"}
+        {"role": "assistant", "content": "Hi there! Tell me a sign or a birth date, and I'll explain! 👀"}
     ]
 
-# mostra histórico
+# show history
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
 def call_groq(user_msg: str) -> str:
     if groq_api_key is None:
-        return "⚠️ Falta a variável GROQ_API_KEY nos secrets."
+        return "⚠️ Missing GROQ_API_KEY secrets key."
 
-    # monta mensagens: system + histórico + nova pergunta
+    # build the message
     messages = [
         {"role": "system", "content": ZODIAC_CONTEXT},
     ]
@@ -58,9 +56,10 @@ def call_groq(user_msg: str) -> str:
 
     messages.append({"role": "user", "content": user_msg})
 
-    # modelo do Groq — pode trocar por "llama-3.1-70b-versatile" se quiser mais forte
+    
     chat = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        # model="llama-3.1-8b-instant",
+        model = "llama-3.1-70b-versatile"
         messages=messages,
         temperature=0.7,
         max_tokens=400,
@@ -68,8 +67,8 @@ def call_groq(user_msg: str) -> str:
 
     return chat.choices[0].message.content
 
-# entrada do usuário
-if prompt := st.chat_input("Digite sua pergunta sobre signos..."):
+# User input
+if prompt := st.chat_input("Type your question about zodiac signs..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
