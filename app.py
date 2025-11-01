@@ -58,8 +58,8 @@ def call_groq(user_msg: str) -> str:
 
     
     chat = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        # model = "llama-3.1-70b-versatile",
+        # model="llama-3.1-8b-instant",
+        model = "llama-3.1-70b-versatile"
         messages=messages,
         temperature=0.7,
         max_tokens=400,
