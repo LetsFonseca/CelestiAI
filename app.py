@@ -101,7 +101,7 @@ def answer_with_rag(user_question:str) -> str:
 
     llm_response = llm.invoke(final_prompt)
 
-    return output_parser.parse(llm_response)
+    return output_parser.parse(llm_response), context
 
 # --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -129,12 +129,19 @@ if user_input:
         st.markdown(user_input)
 
     # get RAG answer
-    answer = answer_with_rag(user_input)
+    answer,context = answer_with_rag(user_input)
 
     # show assistant message
     st.session_state["chat_history"].append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
         st.markdown(answer)
+
+    # show assistant message
+    st.session_state["chat_history"].append({"role": "assistant", "content": context})
+    with st.chat_message("assistant"):
+        st.markdown(context)
+    
+
 
 
 
