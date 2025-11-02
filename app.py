@@ -10,7 +10,7 @@ from langchain_community.vectorstores import Qdrant
 
 #----------------------------------------------------- Streamlit basic config ---------------------------------------------
 
-st.set_page_config(page_title="CelestIA - Zodiac Chat", page_icon="🔮")
+st.set_page_config(page_title="CelestIA - Zodiac Chat - RAG", page_icon="🔮")
 st.title("🔮 CelestIA - Zodiac Chat")
 st.write("Ask about zodiac signs, compatibility, or birth dates.")
 
@@ -139,7 +139,7 @@ if user_input:
     # show assistant message
     st.session_state["chat_history"].append({"role": "assistant", "content": context})
     with st.chat_message("assistant"):
-        st.markdown(context)
+        st.markdown("testeee" + context)
     
 
 
