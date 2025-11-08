@@ -115,8 +115,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hi there! Tell me a sign or a birth date, and I'll explain! 👀"}
     ]
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
+# if "chat_history" not in st.session_state:
+#     st.session_state["chat_history"] = []
 
 # show history
 for msg in st.session_state.messages:
