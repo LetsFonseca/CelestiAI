@@ -10,7 +10,7 @@ from langchain_community.vectorstores import Qdrant
 
 #----------------------------------------------------- Streamlit basic config ---------------------------------------------
 
-st.set_page_config(page_title="CelestIA - Zodiac Chat - RAG", page_icon="🔮")
+st.set_page_config(page_title="CelestIA - Zodiac Chat", page_icon="🔮")
 st.title("🔮 CelestIA - Zodiac Chat")
 st.write("Ask about zodiac signs, compatibility, or birth dates.")
 
@@ -55,23 +55,20 @@ embedding = HuggingFaceEmbeddings(
 )
 
 collection_name = "astrology-zodiac"
-
 vectorstores = Qdrant(
-    url=qdrant_url,
-    api_key=qdrant_api_key,
-    embeddings=embedding,
-    collection_name=collection_name,
+    url = qdrant_url,
+    api_key = qdrant_api_key,
+    embedding = embedding,
+    collection_name = collection_name,
     prefer_grpc=False,  # keep HTTP to avoid some cloud issues
 )
-
-# retriever = vectorstores.as_retriever()
 retriever = vectorstores.as_retriever(search_kwargs = {"k":3})
 
 # ----------------------------------------------------Defining prompt---------------------------------------------------------------------
 
 RAG_PROMPT = ChatPromptTemplate.from_template(
     """
-You are a friendly astrology assistant. You answer using the same language that the user talk with you.
+You are a friendly astrology assistant. You answer using the same language that the user talk you you.
 You MUST use ONLY the information provided in the context below.
 If the answer is not in the context, say that it is not in your material.
 If the user asks for future prediction, say you do not predict the future.
@@ -104,7 +101,7 @@ def answer_with_rag(user_question:str) -> str:
 
     llm_response = llm.invoke(final_prompt)
 
-    return output_parser.parse(llm_response), context
+    return output_parser.parse(llm_response)
 
 # --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -115,8 +112,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hi there! Tell me a sign or a birth date, and I'll explain! 👀"}
     ]
-# if "chat_history" not in st.session_state:
-#     st.session_state["chat_history"] = []
 
 # show history
 for msg in st.session_state.messages:
@@ -134,19 +129,12 @@ if user_input:
         st.markdown(user_input)
 
     # get RAG answer
-    answer,context = answer_with_rag(user_input)
+    answer = answer_with_rag(user_input)
 
     # show assistant message
     st.session_state["chat_history"].append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
         st.markdown(answer)
-
-    # show assistant message
-    st.session_state["chat_history"].append({"role": "assistant", "content": context})
-    with st.chat_message("assistant"):
-        st.markdown("testeee" + context)
-    
-
 
 
 
