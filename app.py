@@ -68,7 +68,7 @@ retriever = vectorstores.as_retriever(search_kwargs = {"k":3})
 
 RAG_PROMPT = ChatPromptTemplate.from_template(
     """
-You are a friendly astrology assistant. You answer using the same language that the user talk you you.
+You are a friendly astrology assistant. You answer using the same language that the user talk with you.
 You MUST use ONLY the information provided in the context below.
 If the answer is not in the context, say that it is not in your material.
 If the user asks for future prediction, say you do not predict the future.
@@ -112,6 +112,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hi there! Tell me a sign or a birth date, and I'll explain! 👀"}
     ]
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
 
 # show history
 for msg in st.session_state.messages:
