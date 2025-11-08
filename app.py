@@ -55,15 +55,17 @@ embedding = HuggingFaceEmbeddings(
 )
 
 collection_name = "astrology-zodiac"
+
 vectorstores = Qdrant(
-    url = qdrant_url,
-    api_key = qdrant_api_key,
-    embedding = embedding,
-    collection_name = collection_name,
-    prefer_grpc=False  # keep HTTP to avoid some cloud issues
+    url=qdrant_url,
+    api_key=qdrant_api_key,
+    embedding=embedding,
+    collection_name=collection_name,
+    prefer_grpc=False,  # keep HTTP to avoid some cloud issues
 )
-retriever = vectorstores.as_retriever()
-# retriever = vectorstores.as_retriever(search_kwargs = {"k":3})
+
+# retriever = vectorstores.as_retriever()
+retriever = vectorstores.as_retriever(search_kwargs = {"k":3})
 
 # ----------------------------------------------------Defining prompt---------------------------------------------------------------------
 
