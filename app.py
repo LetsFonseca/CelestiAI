@@ -60,7 +60,7 @@ vectorstores = Qdrant(
     api_key = qdrant_api_key,
     embedding = embedding,
     collection_name = collection_name,
-    prefer_grpc=False,  # keep HTTP to avoid some cloud issues
+    prefer_grpc=False  # keep HTTP to avoid some cloud issues
 )
 retriever = vectorstores.as_retriever(search_kwargs = {"k":3})
 
