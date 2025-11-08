@@ -59,7 +59,7 @@ collection_name = "astrology-zodiac"
 vectorstores = Qdrant(
     url=qdrant_url,
     api_key=qdrant_api_key,
-    embedding=embedding,
+    embeddings=embedding,
     collection_name=collection_name,
     prefer_grpc=False,  # keep HTTP to avoid some cloud issues
 )
