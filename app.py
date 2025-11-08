@@ -1,12 +1,13 @@
 import streamlit as st
-# from groq import Groq
 import os
 
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Qdrant
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_qdrant import Qdrant
+from qdrant_client import QdrantClient
+
 
 #----------------------------------------------------- Streamlit basic config ---------------------------------------------
 
@@ -55,13 +56,21 @@ embedding = HuggingFaceEmbeddings(
 )
 
 collection_name = "astrology-zodiac"
+
+client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key, prefer_grpc=False)
 vectorstores = Qdrant(
-    url = qdrant_url,
-    api_key = qdrant_api_key,
-    embedding = embedding,
-    collection_name = collection_name,
-    prefer_grpc=False,  # keep HTTP to avoid some cloud issues
+client=client,
+collection_name=collection_name,
+embeddings=embedding,
 )
+
+# vectorstores = Qdrant(
+#     url = qdrant_url,
+#     api_key = qdrant_api_key,
+#     embedding = embedding,
+#     collection_name = collection_name,
+#     prefer_grpc=False,  # keep HTTP to avoid some cloud issues
+# )
 retriever = vectorstores.as_retriever(search_kwargs = {"k":3})
 
 # ----------------------------------------------------Defining prompt---------------------------------------------------------------------
@@ -101,7 +110,7 @@ def answer_with_rag(user_question:str) -> str:
 
     llm_response = llm.invoke(final_prompt)
 
-    return output_parser.parse(llm_response)
+    return output_parser.parse(llm_response),context
 
 # --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -124,33 +133,17 @@ user_input = st.chat_input("Type your astrology question here...")
 
 if user_input:
     # show user message
-    st.session_state["chat_history"].append({"role": "user", "content": user_input})
+    st.session_state["messages"].append({"role": "user", "content": user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
 
     # get RAG answer
-    answer = answer_with_rag(user_input)
+    answer,context = answer_with_rag(user_input)
 
     # show assistant message
-    st.session_state["chat_history"].append({"role": "assistant", "content": answer})
+    st.session_state["messages"].append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
-        st.markdown(answer)
+        st.markdown(answer.content)
+        # st.markdown("context:  " + context)
 
-
-
-
-
-# ZODIAC_CONTEXT = """
-# You are an astrology assistant — friendly, straightforward, and you speak the language that the user speak with you.
-# You talk about the 12 zodiac signs: Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn, Aquarius, and Pisces.
-
-# Rules:
-
-# * If the user provides a date (e.g., 15/08), try to determine the zodiac sign.
-# * If the user only mentions a sign, describe its element, strengths, and cautions.
-# * If the user asks about compatibility, briefly explain the fire/air and earth/water dynamics, then comment on the specific pair.
-# * If the user asks about a “birth chart,” explain that you need the date, time, and city of birth.
-# * Do not promise to predict the future. Keep the tone light and friendly.
-# * If the user strays off topic, steer the conversation back to astrology.
-# """
 
