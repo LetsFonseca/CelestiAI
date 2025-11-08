@@ -9,6 +9,7 @@ from langchain_qdrant import Qdrant
 from qdrant_client import QdrantClient
 
 
+
 #----------------------------------------------------- Streamlit basic config ---------------------------------------------
 
 st.set_page_config(page_title="CelestIA - Zodiac Chat", page_icon="🔮")
@@ -63,54 +64,76 @@ client=client,
 collection_name=collection_name,
 embeddings=embedding,
 )
-
-# vectorstores = Qdrant(
-#     url = qdrant_url,
-#     api_key = qdrant_api_key,
-#     embedding = embedding,
-#     collection_name = collection_name,
-#     prefer_grpc=False,  # keep HTTP to avoid some cloud issues
-# )
 retriever = vectorstores.as_retriever(search_kwargs = {"k":3})
 
 # ----------------------------------------------------Defining prompt---------------------------------------------------------------------
 
 RAG_PROMPT = ChatPromptTemplate.from_template(
     """
-You are a friendly astrology assistant. You answer using the same language that the user talk you you.
+You are a friendly astrology assistant. You answer using the same language the user uses.
 You MUST use ONLY the information provided in the context below.
 If the answer is not in the context, say that it is not in your material.
 If the user asks for future prediction, say you do not predict the future.
 
-Context:
+Here is the conversation so far between the user and the assistant:
+{chat_history}
+
+Here is additional astrology context from the knowledge base:
 {context}
 
-User question:
+User question (last message):
 {question}
 
 Answer (short, clear, friendly):
 """
 )
 
+
 output_parser = StrOutputParser()
 
-# ------------------------------------------------------- Main function -------------------------------------------------------------------
+# ------------------------------------------------------- Main functions -------------------------------------------------------------------
 
-def answer_with_rag(user_question:str) -> str:
+def format_chat_history() -> str:
     """
-        Retrieves relevant astrology chunks from Qdrant
-        and asks the Groq LLM to answer using only that context.
+    Convert Streamlit chat history into a plain text transcript
+    to send to the LLM.
     """
+    messages = st.session_state.get("messages", [])
+    lines = []
+    for m in messages:
+        if m["role"] == "user":
+            prefix = "User"
+        else:
+            prefix = "Assistant"
+        lines.append(f"{prefix}: {m['content']}")
+    return "\n".join(lines)
 
+
+def answer_with_rag(user_question: str) -> tuple[str, str]:
+    """
+    Retrieves relevant astrology chunks from Qdrant
+    and asks the Groq LLM to answer using context + chat history.
+    """
+    # 1) retrieve docs
     docs = retriever.invoke(user_question)
     context = "\n\n".join(doc.page_content for doc in docs)
 
-    #build final prompt
-    final_prompt = RAG_PROMPT.format(context=context,question=user_question)
+    # 2) format chat history
+    chat_history = format_chat_history()
 
+    # 3) build final prompt
+    final_prompt = RAG_PROMPT.format(
+        context=context,
+        question=user_question,
+        chat_history=chat_history,
+    )
+
+    # 4) call LLM
     llm_response = llm.invoke(final_prompt)
+    answer_text = llm_response.content
 
-    return output_parser.parse(llm_response),context
+    return answer_text, context
+
 
 # --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -121,6 +144,9 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hi there! Tell me a sign or a birth date, and I'll explain! 👀"}
     ]
+
+# if "chat_history" not in st.session_state:
+#     st.session_state["chat_history"] = []
 
 # show history
 for msg in st.session_state.messages:
@@ -143,7 +169,7 @@ if user_input:
     # show assistant message
     st.session_state["messages"].append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
-        st.markdown(answer.content)
-        # st.markdown("context:  " + context)
+        st.markdown(answer)
+        st.markdown("context:  " + context)
 
 
