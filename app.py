@@ -170,6 +170,6 @@ if user_input:
     st.session_state["messages"].append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
         st.markdown(answer)
-        st.markdown("context:  " + context)
+        # st.markdown("context:  " + context)
 
 
